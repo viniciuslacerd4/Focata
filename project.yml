@@ -1,0 +1,101 @@
+name: Focata
+
+options:
+  bundleIdPrefix: dev.vinicius
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Assinatura ad-hoc: qualquer pessoa clona e builda sem configurar nada,
+    # e nenhum Team ID vai para o repositório.
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGNING_REQUIRED: YES
+    CODE_SIGNING_ALLOWED: YES
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    DEAD_CODE_STRIPPING: YES
+
+packages:
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: "2.0.0"
+
+targets:
+  Focata:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/Focata
+      - path: Resources
+      # As licenças viajam dentro do .app: quem baixa o .dmg não vê o repositório,
+      # e a MIT do KeyboardShortcuts exige o aviso junto das cópias distribuídas.
+      # Entram aqui, no build, para ficarem seladas pela assinatura.
+      - path: LICENSE
+        buildPhase: resources
+      - path: THIRD-PARTY-LICENSES
+        buildPhase: resources
+    dependencies:
+      - package: KeyboardShortcuts
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.vinicius.focata
+        PRODUCT_NAME: Focata
+        INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2026 Vinicius Lacerda. MIT License."
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        COMBINE_HIDPI_IMAGES: YES
+    info:
+      path: Sources/Focata/App/Info.plist
+      properties:
+        CFBundleName: Focata
+        CFBundleDisplayName: Focata
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        # Sem ícone no Dock e sem menu bar de app: o Focata vive só na barra de status.
+        LSUIElement: true
+        NSHighResolutionCapable: true
+        # Pilotar o app de fora: `open --background 'focata:?text=Exercitar'`
+        CFBundleURLTypes:
+          - CFBundleURLName: dev.vinicius.focata
+            CFBundleTypeRole: Editor
+            CFBundleURLSchemes:
+              - focata
+        # "Serviços › Enviar para o Focata" a partir de texto selecionado.
+        NSServices:
+          - NSMenuItem:
+              default: Enviar para o Focata
+            NSMessage: sendToFocata
+            NSPortName: Focata
+            NSSendTypes:
+              - public.utf8-plain-text
+
+  FocataTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/FocataTests
+    dependencies:
+      - target: Focata
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.vinicius.focata.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Focata:
+    build:
+      targets:
+        Focata: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - FocataTests

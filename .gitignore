@@ -1,0 +1,70 @@
+# ─── Xcode / build ──────────────────────────────────────────────────────────
+# Gerado pelo XcodeGen — project.yml é a fonte da verdade
+*.xcodeproj
+*.xcworkspace
+
+build/
+DerivedData/
+.build/
+*.xcuserstate
+*.xcuserdatad
+xcuserdata/
+*.xcresult
+*.moved-aside
+
+# SwiftPM
+.swiftpm/
+Packages/
+Package.resolved
+
+# ─── Artefatos de distribuição ──────────────────────────────────────────────
+dist/
+*.dmg
+*.app
+*.zip
+
+# ─── Assinatura / credenciais — nada disso pode vazar ───────────────────────
+.env
+.env.*
+*.p12
+*.pem
+*.key
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+*.keychain
+*.keychain-db
+ExportOptions.plist
+notarize*.json
+
+# ─── macOS ──────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Icon
+.Spotlight-V100
+.Trashes
+
+# ─── Editores e ferramentas de IA (config local, não vai para o repo) ───────
+.claude/
+.cursor/
+.cursorrules
+.windsurfrules
+.aider*
+.continue/
+.vscode/
+.idea/
+*.swp
+
+# ─── Python (scripts/dmg-layout.py) ─────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ─── Diversos ───────────────────────────────────────────────────────────────
+*.log
+*.tmp
+
