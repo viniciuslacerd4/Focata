@@ -42,7 +42,16 @@ codesign --verify --strict "$APP" || {
 # 2. Palco ------------------------------------------------------------------
 STAGE="$(mktemp -d)"
 SCRATCH="$(mktemp -d)"
-trap 'rm -rf "$STAGE" "$SCRATCH"' EXIT
+MOUNT=""
+# Sair no meio do caminho sem desmontar deixa um volume "Focata" pendurado, e
+# é ele que faz a execução seguinte montar como "Focata 1" e arrumar a janela
+# do volume errado. Por isso o trap desmonta antes de apagar os diretórios.
+limpar() {
+    [ -n "$MOUNT" ] && hdiutil detach "$MOUNT" >/dev/null 2>&1
+    rm -rf "$STAGE" "$SCRATCH"
+    return 0
+}
+trap limpar EXIT
 
 cp -R "$APP" "$STAGE/Focata.app"
 ln -s /Applications "$STAGE/Applications"
@@ -80,8 +89,24 @@ montar() {
 }
 desmontar() {
     sync
-    hdiutil detach "$1" >/dev/null || hdiutil detach "$1" -force >/dev/null
+    hdiutil detach "$1" >/dev/null 2>&1 || hdiutil detach "$1" -force >/dev/null 2>&1
+    [ "$1" = "$MOUNT" ] && MOUNT=""
+    return 0
 }
+
+# Um volume com o mesmo nome já aberto no Finder, tipicamente o .dmg da versão
+# anterior, rouba o ponto de montagem: a imagem nova vira "/Volumes/Focata 1" e
+# o AppleScript abaixo, que fala com o volume pelo nome, arruma a janela da
+# imagem antiga. Desmontar antes é o que faz o resultado sair igual em qualquer
+# Mac, inclusive no de quem acabou de instalar a versão passada.
+for dev in $(hdiutil info | awk -F'\t' -v vol="/Volumes/$VOLNAME" '$NF == vol {print $1}'); do
+    echo "um volume $VOLNAME já estava montado, desmontando: $dev"
+    hdiutil detach "$dev" >/dev/null 2>&1 || hdiutil detach "$dev" -force >/dev/null 2>&1
+done
+if [ -e "/Volumes/$VOLNAME" ]; then
+    echo "ainda há algo montado em /Volumes/$VOLNAME; ejete e rode de novo" >&2
+    exit 1
+fi
 
 MOUNT="$(montar)"
 [ -n "$MOUNT" ] || { echo "não consegui montar a imagem" >&2; exit 1; }
@@ -122,9 +147,16 @@ MOUNT="$(montar)"
 # janelas lado a lado ele ignora o AppleScript. E os três arquivos ocultos
 # ficam empilhados em cima do título para quem liga "mostrar ocultos". As duas
 # coisas se resolvem escrevendo direto no .DS_Store.
-python3 "$ROOT/scripts/dmg-layout.py" "$MOUNT/.DS_Store" \
-    --bounds 200 200 "$WIN_W" $((WIN_H + TITLEBAR)) \
-    --mover "$HIDDEN_X" "$HIDDEN_Y" .background .fseventsd .VolumeIcon.icns
+# Sem permissão de automação o Finder não grava .DS_Store nenhum, e aí não há
+# layout para ajustar. O .dmg continua válido, só abre com a janela padrão, que
+# é o que o aviso lá em cima promete.
+if [ -f "$MOUNT/.DS_Store" ]; then
+    python3 "$ROOT/scripts/dmg-layout.py" "$MOUNT/.DS_Store" \
+        --bounds 200 200 "$WIN_W" $((WIN_H + TITLEBAR)) \
+        --mover "$HIDDEN_X" "$HIDDEN_Y" .background .fseventsd .VolumeIcon.icns
+else
+    echo "aviso: o Finder não gravou o layout; o .dmg sai com a janela padrão" >&2
+fi
 
 # O ícone do volume precisa do tipo de arquivo `icnC` e do bit de ícone
 # personalizado na raiz; hdiutil não leva nada disso do palco.
