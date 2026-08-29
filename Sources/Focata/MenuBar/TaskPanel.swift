@@ -21,6 +21,8 @@ struct TaskPanelView: View {
     /// Inicia, pausa ou retoma o ciclo.
     var toggleTimer: () -> Void
     let focus: EditorFocus
+    /// A saída de cena da tarefa concluída, quando concluir limpa a barra.
+    let completion: TaskCompletionAnimation
 
     static let width: CGFloat = 380
 
@@ -37,7 +39,12 @@ struct TaskPanelView: View {
 
             HStack(alignment: .top, spacing: 0) {
                 completeButton
-                EditorView(task: task, onDismiss: minimize, focusToken: focus.token)
+                EditorView(
+                    task: task,
+                    onDismiss: minimize,
+                    focusToken: focus.token,
+                    completion: completion
+                )
             }
         }
         .frame(width: Self.width)
@@ -206,6 +213,19 @@ private struct TitleBarButton: NSViewRepresentable {
     }
 }
 
+/// `NSHostingController` que conta a altura que o conteúdo gostaria de ter.
+///
+/// `fittingSize` só é confiável a cada passada de layout, e é aí que a caixa
+/// descobre que ganhou ou perdeu uma linha de texto.
+private final class ContentSizingHostingController<Content: View>: NSHostingController<Content> {
+    var onContentHeight: ((CGFloat) -> Void)?
+
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        onContentHeight?(view.fittingSize.height)
+    }
+}
+
 /// Dono da janela da caixa da tarefa.
 ///
 /// É um `NSPanel` flutuante e não uma janela comum: o Focata é um app
@@ -228,6 +248,7 @@ final class TaskPanelController: NSObject, NSWindowDelegate {
 
     private var panel: NSPanel?
     private let focus = EditorFocus()
+    private let completion = TaskCompletionAnimation()
     /// Enquanto o menu está aberto a caixa perde o foco, e perder o foco
     /// normalmente a esconde. Sem esta trava, clicar nos três pontinhos fecharia
     /// a caixa por baixo do próprio menu.
@@ -306,8 +327,37 @@ final class TaskPanelController: NSObject, NSWindowDelegate {
     /// o Focata mora. Não há Dock para onde encolher.
     func hide() {
         guard let panel, panel.isVisible else { return }
+        completion.cancel()
         panel.orderOut(nil)
         onHide?()
+    }
+
+    /// Com a caixa aberta, a tarefa concluída sai de cena antes de a caixa
+    /// ficar em branco. Fechada, não há o que animar — quem conclui pelo atalho
+    /// global sem olhar para a caixa não fica esperando por uma animação.
+    func animateCompletion(of text: String) {
+        guard isVisible else { return }
+        completion.play(farewellTo: text)
+    }
+
+    /// Põe a janela na altura do conteúdo, ancorada pelo topo.
+    ///
+    /// A caixa cresce e encolhe pela borda de baixo — é pelo topo que você a
+    /// posiciona, e mexer nele faria o texto pular sob o cursor a cada linha.
+    private func fit(to height: CGFloat) {
+        guard let panel, height > 0 else { return }
+        let current = panel.contentRect(forFrameRect: panel.frame).height
+        // Redimensionar dispara outra passada de layout: sem esta comparação as
+        // duas ficariam se chamando.
+        guard abs(current - height) > 0.5 else { return }
+
+        let topLeft = NSPoint(x: panel.frame.minX, y: panel.frame.maxY)
+        // O AppKit acompanha a altura preferida do conteúdo pelo tamanho mínimo
+        // da janela — que sobe com o texto e não desce. Era ele que segurava a
+        // caixa grande depois que a tarefa saía.
+        panel.contentMinSize = NSSize(width: TaskPanelView.width, height: height)
+        panel.setContentSize(NSSize(width: TaskPanelView.width, height: height))
+        panel.setFrameTopLeftPoint(topLeft)
     }
 
     private func toggleCompletion() {
@@ -336,7 +386,8 @@ final class TaskPanelController: NSObject, NSWindowDelegate {
             minimize: { [weak self] in self?.hide() },
             toggleCompletion: { [weak self] in self?.toggleCompletion() },
             toggleTimer: { [weak self] in self?.actions.toggleTimer() },
-            focus: focus
+            focus: focus,
+            completion: completion
         )
 
         let panel = NSPanel(
@@ -345,11 +396,12 @@ final class TaskPanelController: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        let hosting = NSHostingController(rootView: view)
+        let hosting = ContentSizingHostingController(rootView: view)
         // Com `.fullSizeContentView` a faixa da barra de título do sistema entra
         // na safe area, e a SwiftUI empurraria a nossa barra 28pt para baixo —
         // uma sobra de espaço vazio no topo da caixa.
         hosting.safeAreaRegions = []
+        hosting.onContentHeight = { [weak self] height in self?.fit(to: height) }
         panel.contentViewController = hosting
         // Medir agora, antes de posicionar: recém-criada a janela ainda tem o
         // tamanho do `contentRect` de mentira, e centralizar uma janela sem

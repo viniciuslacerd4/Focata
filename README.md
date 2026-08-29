@@ -50,9 +50,11 @@ Depois de instalado, o Focata pergunta ao GitHub se saiu versão nova — quando
 **Fluxo**
 - Clique no **anel** inicia ou pausa o foco; clique no **texto** abre a caixa da tarefa, centralizada.
 - A caixa tem barra de título própria: play/pause, tempo do ciclo, pomodoros da tarefa, botão de minimizar e três pontinhos com o mesmo menu do clique direito.
+- A caixa cresce com o texto até cinco linhas, sempre pela borda de baixo; passando disso o campo rola por dentro, com o cursor à vista.
 - `return`/`esc` minimizam a caixa, **shift**+clique limpa, clique direito abre o menu.
 - Arraste um item do Lembretes, do Things ou qualquer texto sobre o ícone para definir a tarefa.
 - O check redondo na caixa conclui a tarefa: ela entra no histórico e a barra fica limpa para a próxima.
+- Com a caixa aberta, a tarefa concluída sai de cena antes de o campo ficar em branco: o risco atravessa uma linha de cada vez — com o barulho de giz no papel a cada traço —, o texto se desfaz e o convite da próxima sobe no lugar.
 - Se preferir manter o texto riscado à mostra (Configurações › Pomodoro), o check vira interruptor: clicar de novo reabre a tarefa.
 
 **Histórico**

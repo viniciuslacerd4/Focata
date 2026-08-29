@@ -288,4 +288,8 @@ final class StatusItemController: NSObject, EditorPresenting {
     func presentEditor() {
         panel.show()
     }
+
+    func animateCompletion(of text: String) {
+        panel.animateCompletion(of: text)
+    }
 }
