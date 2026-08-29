@@ -32,7 +32,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 
     var height: CGFloat {
         switch self {
-        case .general: 430
+        case .general: 390
         case .appearance: 560
         case .pomodoro: 700
         case .shortcuts: 300
@@ -218,7 +218,6 @@ private struct GeneralTab: View {
 
             Section {
                 Toggle("Esconder o editor ao clicar fora", isOn: $settings.hideEditorWhenDeactivated)
-                Toggle("Esconder o item da barra quando vazio", isOn: $settings.hideMenuBarItemWhenEmpty)
             }
 
             Section {

@@ -86,7 +86,6 @@ final class AppSettings {
 
     var trackHistory: Bool { didSet { defaults.set(trackHistory, forKey: Key.trackHistory) } }
     var hideEditorWhenDeactivated: Bool { didSet { defaults.set(hideEditorWhenDeactivated, forKey: Key.hideEditorWhenDeactivated) } }
-    var hideMenuBarItemWhenEmpty: Bool { didSet { defaults.set(hideMenuBarItemWhenEmpty, forKey: Key.hideMenuBarItemWhenEmpty) } }
 
     /// Se o app pergunta ao GitHub, uma vez por dia, se saiu versão nova.
     ///
@@ -159,7 +158,6 @@ final class AppSettings {
         defaults.register(defaults: [
             Key.trackHistory: true,
             Key.hideEditorWhenDeactivated: true,
-            Key.hideMenuBarItemWhenEmpty: false,
             Key.automaticUpdateChecks: true,
             Key.prefixText: "",
             Key.suffixText: "",
@@ -183,7 +181,6 @@ final class AppSettings {
 
         trackHistory = defaults.bool(forKey: Key.trackHistory)
         hideEditorWhenDeactivated = defaults.bool(forKey: Key.hideEditorWhenDeactivated)
-        hideMenuBarItemWhenEmpty = defaults.bool(forKey: Key.hideMenuBarItemWhenEmpty)
         automaticUpdateChecks = defaults.bool(forKey: Key.automaticUpdateChecks)
         prefixText = defaults.string(forKey: Key.prefixText) ?? ""
         suffixText = defaults.string(forKey: Key.suffixText) ?? ""
@@ -207,7 +204,6 @@ final class AppSettings {
     enum Key {
         static let trackHistory = "trackHistory"
         static let hideEditorWhenDeactivated = "hideEditorWhenDeactivated"
-        static let hideMenuBarItemWhenEmpty = "hideMenuBarItemWhenEmpty"
         static let automaticUpdateChecks = "automaticUpdateChecks"
         static let prefixText = "prefixText"
         static let suffixText = "suffixText"
