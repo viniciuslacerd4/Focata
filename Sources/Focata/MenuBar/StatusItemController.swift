@@ -133,9 +133,11 @@ final class StatusItemController: NSObject, EditorPresenting {
         if let button = statusItem.button {
             dragView.frame = button.bounds
         }
-        // Enquanto a caixa está aberta o item precisa continuar visível: é a
-        // ela que se volta ao minimizar.
-        statusItem.isVisible = !(settings.hideMenuBarItemWhenEmpty && task.isEmpty && !panel.isVisible)
+        // Sempre visível, e dito a cada repintura de propósito: o AppKit guarda
+        // a visibilidade do item entre sessões, então quem tinha o antigo
+        // "esconder quando vazio" ligado continuaria sem item para sempre — e
+        // sem Dock, sem janela e sem item não sobra por onde abrir o app.
+        statusItem.isVisible = true
     }
 
     private func ringContent(at now: Date) -> MenuBarItemRenderer.Content.Ring? {
