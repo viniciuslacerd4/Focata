@@ -45,7 +45,14 @@ final class AppActions {
     }
 
     func completeTask() {
+        let concluida = task.text
         taskController.complete()
+        // Concluir com "limpar a barra" apaga o texto no mesmo instante. Se a
+        // caixa estiver aberta, ela ainda mostra a tarefa saindo de cena — o
+        // fechamento que a barra limpa não daria.
+        if task.isEmpty, !concluida.isEmpty {
+            editorPresenter?.animateCompletion(of: concluida)
+        }
     }
 
     func uncompleteTask() {
@@ -97,4 +104,7 @@ final class AppActions {
 @MainActor
 protocol EditorPresenting: AnyObject {
     func presentEditor()
+    /// A caixa, se estiver aberta, despede a tarefa concluída antes de ficar
+    /// em branco.
+    func animateCompletion(of text: String)
 }
