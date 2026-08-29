@@ -31,10 +31,17 @@ final class SettingsWindowController: NSObject, NSToolbarDelegate {
     private func makeWindow() {
         let hosting = NSHostingController(rootView: SettingsView(settings: .shared, tab: tab))
         let window = NSWindow(contentViewController: hosting)
-        window.styleMask = [.titled, .closable]
+        // `.fullSizeContentView` para a view de conteúdo ir até o topo: sem ela
+        // a faixa da barra de ferramentas fica fora dela e o sistema pinta ali
+        // um cinza quase preto, uma tarja opaca em cima do resto translúcido.
+        window.styleMask = [.titled, .closable, .fullSizeContentView]
         window.isReleasedWhenClosed = false
         // O mesmo escuro translúcido da caixa da tarefa.
         window.adoptTranslucentBackground()
+        // A faixa de título não desenha nada por cima do material — nem fundo,
+        // nem o risco que separa a barra de ferramentas do conteúdo.
+        window.titlebarAppearsTransparent = true
+        window.titlebarSeparatorStyle = .none
 
         let toolbar = NSToolbar(identifier: "FocataSettings")
         toolbar.delegate = self
@@ -51,6 +58,9 @@ final class SettingsWindowController: NSObject, NSToolbarDelegate {
         // O título é o nome da aba, como nas preferências do sistema: a janela
         // já se apresenta pelo ícone do app na barra de ferramentas.
         window.title = tab.label
+        // Só agora, com a barra de ferramentas montada, dá para medir a faixa
+        // do topo e dar à janela a altura da aba mais ela.
+        resize(to: tab.height)
         window.center()
     }
 
@@ -62,12 +72,23 @@ final class SettingsWindowController: NSObject, NSToolbarDelegate {
         resize(to: tab.height)
     }
 
+    /// Altura da faixa de título com a barra de ferramentas.
+    ///
+    /// Medida na própria janela porque com `.fullSizeContentView` a view de
+    /// conteúdo passa por baixo dela: a janela precisa da altura da aba mais
+    /// essa faixa, senão a barra come o topo do formulário.
+    private var chromeHeight: CGFloat {
+        guard let window else { return 0 }
+        return max(0, window.frame.height - window.contentLayoutRect.height)
+    }
+
     /// A janela cresce e encolhe pela borda de baixo: a barra de ferramentas
     /// fica parada no lugar enquanto o conteúdo se ajusta.
     private func resize(to height: CGFloat) {
         guard let window else { return }
 
-        let content = NSRect(origin: .zero, size: NSSize(width: SettingsTab.width, height: height))
+        let size = NSSize(width: SettingsTab.width, height: height + chromeHeight)
+        let content = NSRect(origin: .zero, size: size)
         let target = window.frameRect(forContentRect: content)
         var frame = window.frame
         frame.origin.y += frame.height - target.height

@@ -124,19 +124,43 @@ struct SettingsTabButton: View {
             }
             .foregroundStyle(isSelected ? .white : Color.secondary)
             .frame(width: 78, height: 46)
-            // Cápsula, e recuada das bordas do item: a barra de ferramentas é
-            // uma cápsula, e um retângulo de cantos retos escaparia pela curva
-            // dela nos itens das pontas.
+            // O realce é a fatia da cápsula da barra de ferramentas que cabe a
+            // esta aba, e não uma pílula solta por dentro dela: arredondado só
+            // na ponta de fora, onde encosta na curva da cápsula, e reto onde
+            // encosta na aba vizinha.
+            //
+            // A cápsula tem 44pt contra os 46 do item, e nasce meio ponto à
+            // direita e um ponto abaixo dele — daí o recuo de meio ponto e o
+            // `offset`, que são o que faz o realce cobrir a fatia exata sem
+            // sobrar borda de um lado nem vazar do outro.
             .background(
-                Capsule(style: .continuous)
-                    .fill(.white.opacity(isSelected ? 0.16 : 0))
-                    .padding(.horizontal, 0.5)
-                    .padding(.vertical, 0)
+                UnevenRoundedRectangle(
+                    topLeadingRadius: leadingRadius,
+                    bottomLeadingRadius: leadingRadius,
+                    bottomTrailingRadius: trailingRadius,
+                    topTrailingRadius: trailingRadius,
+                    style: .circular
+                )
+                .fill(.white.opacity(isSelected ? 0.16 : 0))
+                .padding(.vertical, 0.5)
+                .offset(x: 0.5, y: 1)
             )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .help(tab.label)
+    }
+
+    /// Metade da altura da cápsula da barra: é o que faz a ponta de fora ser a
+    /// mesma meia-lua dela, e não um canto arredondado qualquer por dentro.
+    private static let endRadius: CGFloat = 22
+
+    private var leadingRadius: CGFloat {
+        SettingsTab.allCases.first == tab ? Self.endRadius : 0
+    }
+
+    private var trailingRadius: CGFloat {
+        SettingsTab.allCases.last == tab ? Self.endRadius : 0
     }
 }
 
@@ -160,7 +184,10 @@ struct SettingsView: View {
         // Sem azul: os controles seguem o branco do resto do app.
         .tint(.focataControl)
         .toggleStyle(FocataSwitchStyle())
-        .background(VisualEffectBackground())
+        // `ignoresSafeArea` para o material subir até a borda de cima: o
+        // conteúdo fica abaixo da barra de ferramentas, mas o fundo passa por
+        // trás dela e a janela inteira é a mesma translucidez.
+        .background(VisualEffectBackground().ignoresSafeArea())
     }
 }
 
