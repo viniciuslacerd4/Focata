@@ -33,7 +33,7 @@ The app is ad hoc signed, without a Developer ID, so macOS will block it the fir
 xattr -d com.apple.quarantine /Applications/Focata.app
 ```
 
-Once installed, Focata checks GitHub for new versions—when you start your Mac and once a day—and shows an alert when one is available. “Download” takes you straight to the new version's `.dmg`; the other buttons are “Later” and “Skip This Version.” The request is anonymous, nothing you type ever leaves your Mac, and nothing is downloaded without your click. You can turn this off under **Settings › General**, or check on demand from the menu or with the “Check Now” button.
+Once installed, Focata checks GitHub for new versions when you start your Mac and once a day, and shows an alert when one is available. “Download” takes you straight to the new version's `.dmg`; the other buttons are “Later” and “Skip This Version.” The request is anonymous, nothing you type ever leaves your Mac, and nothing is downloaded without your click. You can turn this off under **Settings › General**, or check on demand from the menu or with the “Check Now” button.
 
 ## What it does
 
@@ -56,13 +56,13 @@ Once installed, Focata checks GitHub for new versions—when you start your Mac 
 - `return`/`esc` minimize the panel, **shift**+click clears it, and right-click opens the menu.
 - Drag an item from Reminders, Things, or any text onto the icon to set the task.
 - The round check button in the panel completes the task: it is added to the history and the menu bar is cleared for the next one.
-- With the panel open, a completed task leaves the stage before the field goes blank: the strikethrough crosses one line at a time—with the sound of chalk on paper for each stroke—the text dissolves, and the prompt for the next task rises into place.
+- With the panel open, a completed task leaves the stage before the field goes blank: the strikethrough crosses one line at a time, with the sound of chalk on paper for each stroke. The text dissolves, and the prompt for the next task rises into place.
 - If you prefer to keep the crossed-out text visible (**Settings › Pomodoro**), the check button becomes a toggle: click it again to reopen the task.
 
 **History**
 
 - Completed and abandoned tasks, with their date and Pomodoro count.
-- Depends on the “Clear the menu bar” option. When crossed-out text remains visible, completion can be undone with the check button—and an entry that can be undone is not really a record. In this mode, nothing is added to the history, whether completed or abandoned.
+- Depends on the “Clear the menu bar” option. When crossed-out text remains visible, completion can be undone with the check button. An entry that can be undone is not really a record. In this mode, nothing is added to the history, whether completed or abandoned.
 - Delete entries one by one, or clear everything.
 - **Private mode**: the session runs normally but leaves no trace.
 
@@ -131,7 +131,7 @@ The script builds the Release configuration, creates a disk image containing the
 xcodebuild -project Focata.xcodeproj -scheme Focata -derivedDataPath build test
 ```
 
-62 tests cover the Pomodoro engine (transitions, a long break every N cycles, pause/resume, clock jumps caused by sleep), history (persistence, completed and abandoned tasks, private mode), the Markdown renderer, URL parser, and update checker (version comparison, release parsing, daily interval, skipped version). The engine and update checker use an injectable clock, so 25 minutes—or an entire day—pass whenever the test tells them to.
+62 tests cover the Pomodoro engine (transitions, a long break every N cycles, pause/resume, clock jumps caused by sleep), history (persistence, completed and abandoned tasks, private mode), the Markdown renderer, URL parser, and update checker (version comparison, release parsing, daily interval, skipped version). The engine and update checker use an injectable clock, so 25 minutes, or an entire day, pass whenever the test tells them to.
 
 ## How it is built
 
@@ -140,7 +140,7 @@ xcodebuild -project Focata.xcodeproj -scheme Focata -derivedDataPath build test
 - **The menu bar content is an `NSImage`**, not an `NSView` inside the button: on modern macOS, the item is hosted remotely by Control Center, and a subview with Auto Layout conflicts with that hosting.
 - **All progress is derived from absolute dates**, never by counting ticks. This is what lets the timer survive while the Mac is asleep. Sleeping for four hours earns one Pomodoro, not four.
 - **A single action facade** (`AppActions`) serves the menu, URL scheme, Shortcuts, Services, and keyboard shortcuts, so “skip cycle” behaves the same no matter where it comes from.
-- **Preferences are stored in `UserDefaults`**, and history as JSON in Application Support—easy to delete entry by entry and export, with no schema migrations.
+- **Preferences are stored in `UserDefaults`**, and history as JSON in Application Support. Entries are easy to delete one by one and export, with no schema migrations.
 - **Updates are notifications, not automatic installations.** The app is ad hoc signed and distributed as a `.dmg`; the reliable approach is to ask GitHub for the latest release and open the download. Nothing is silently replaced on your Mac.
 - **No App Sandbox**, by choice: this is what enables the Services menu and `defaults read`.
 
